@@ -18,8 +18,10 @@ namespace Game
         public GameConstants.PlayerStance lastStance { get; set; }
         private bool isMotionCheckEnabled;
         public Hero modelPosition;
-        private Model model;
-
+        private Model modelUp;
+        private Model modelLeft;
+        private Model modelRight;
+        private Model currentModel;
         private float modelGroundLevel;
 
         private Texture2D []progressBarTextures;
@@ -66,7 +68,7 @@ namespace Game
         public int ScoreInCurrentGame;
 
         private string stateString="_";
-
+        private bool JumpLeft;
 
         public void LoadContent(ContentManager content)
         {
@@ -75,12 +77,15 @@ namespace Game
             progressBarTextures[1] = content.Load<Texture2D>(@"Sprites\player_progressbar_medium");
             progressBarTextures[2] = content.Load<Texture2D>(@"Sprites\player_progressbar_low");
             progressBarBackground.LoadSprite(content,@"Sprites\player_progressbar_background");
-            model = content.Load<Model>(@"Models\hero");
+            modelUp = content.Load<Model>(@"Models\heroUp");
+            modelRight = content.Load<Model>(@"Models\heroRight");
+            modelLeft = content.Load<Model>(@"Models\heroLeft");
             nyanSprite.LoadSprite(content, @"Sprites\nyan");
         }
 
         public KinectPlayer(Vector3 platformData)
         {
+            JumpLeft = false;
             progressBarBackground = new Sprite();
             progressBarBackground.Rectangle = new Rectangle(0,0,GameConstants.HorizontalGameResolution,GameConstants.VerticalGameResolution/80);
             progressBarFrame = new Sprite();
@@ -97,7 +102,7 @@ namespace Game
             progressBarTextures = new Texture2D[3];
             modelPosition = new Hero(new ObjectData3D
                                       {
-                                          Scale = new Vector3(1f),
+                                          Scale = new Vector3(GameConstants.HeroScale),
                                           Rotation = new Vector3(0.0f)
                                       });
             
@@ -107,6 +112,7 @@ namespace Game
             modelGroundLevel = platformData.Y+GameConstants.PlayerModelHeight;
             modelPosition.objectArrangement.Position = new Vector3(platformData.X,modelGroundLevel,platformData.Z);
             modelPosition.oldArrangement = modelPosition.objectArrangement;
+            currentModel = modelUp;
         }
         #endregion
 
@@ -230,6 +236,7 @@ namespace Game
                 stateString = "/\\";
                 lastStance = currentStance;
                 currentStance = GameConstants.PlayerStance.JumpReady;
+                currentModel = modelUp;
             }
         }
         private void CheckLeftHandUp(Skeleton skeleton)
@@ -245,11 +252,13 @@ namespace Game
 
                         if (footDistance > GameConstants.FootToFootDistance)
                         {
-                            stateString = "<-";
+                            stateString = "Kin<-";
                             isMotionCheckEnabled = false;
                             jumpDirection = -1;
                             lastStance = currentStance;
                             currentStance = GameConstants.PlayerStance.SideJumpReady;
+                            currentModel = modelLeft;
+                            JumpLeft = true;
                         }
                     }
                 }
@@ -268,11 +277,13 @@ namespace Game
 
                         if (footDistance > GameConstants.FootToFootDistance)
                         {
-                            stateString = "->";
+                            stateString = "Kin->";
                             isMotionCheckEnabled = false;
                             jumpDirection = 1;
                             lastStance = currentStance;
                             currentStance = GameConstants.PlayerStance.SideJumpReady;
+                            currentModel = modelRight;
+                            JumpLeft = false;
                         }
                     }
                 }
@@ -285,6 +296,7 @@ namespace Game
                 case GameConstants.PlayerStance.Idle:
                     isMotionCheckEnabled = true;
                     CheckJumpForward(skeleton);
+                    currentModel = modelUp;
                     if (currentStance == GameConstants.PlayerStance.Idle)
                     {
                         CheckLeftHandUp(skeleton);
@@ -487,10 +499,11 @@ namespace Game
         {
             progressBarBackground.DrawByRectangle(spriteBatch);
             nyanSprite.DrawByRectangle(spriteBatch);
-            modelPosition.Draw(camera, model);
+            if (currentModel == null) currentModel = modelUp;  // brzydkie ale tak musi byc :/ błąd z asynchronicznym Draw
+            modelPosition.Draw(camera, currentModel);
             spriteBatch.Begin();
-            spriteBatch.DrawString(font, "Points : " + ScoreInCurrentGame.ToString(), new Vector2(GameConstants.HorizontalGameResolution/200, GameConstants.VerticalGameResolution/100), Color.Yellow, 0, Vector2.Zero,3, SpriteEffects.None, 1);
-            spriteBatch.DrawString(font, stateString, new Vector2(GameConstants.HorizontalGameResolution*0.95f, GameConstants.VerticalGameResolution / 100), Color.Yellow, 0, Vector2.Zero, 3, SpriteEffects.None, 1);
+            spriteBatch.DrawString(font, "Points : "+ ScoreInCurrentGame.ToString(), new Vector2(GameConstants.HorizontalGameResolution/200, GameConstants.VerticalGameResolution/100), Color.Yellow, 0, Vector2.Zero,3, SpriteEffects.None, 1);
+            //spriteBatch.DrawString(font, stateString, new Vector2(GameConstants.HorizontalGameResolution*0.95f, GameConstants.VerticalGameResolution / 100), Color.Yellow, 0, Vector2.Zero, 3, SpriteEffects.None, 1);
             spriteBatch.Draw(progressBarTextures[progressBarTextureType],progressBarRectangle,Color.White);
             spriteBatch.End();
 
@@ -519,25 +532,28 @@ namespace Game
                         stateString = "/\\";
                         isMotionCheckEnabled = false;
                         lastStance = currentStance;
-                        currentStance = GameConstants.PlayerStance.JumpReady;
+                        currentStance = GameConstants.PlayerStance.JumpReady; 
+                        currentModel = modelUp;
                     }
 
                     if (Keyboard.GetState().IsKeyDown(Keys.A))
                     {
-                        stateString = "<-";
+                        stateString = "key<-";
                         isMotionCheckEnabled = false;
                         jumpDirection = -1;
                         lastStance = currentStance;
                         currentStance = GameConstants.PlayerStance.SideJumpReady;
+                        currentModel = modelLeft;
                     }
 
                     if (Keyboard.GetState().IsKeyDown(Keys.D))
                     {
-                        stateString = "->";
+                        stateString = "key->";
                         isMotionCheckEnabled = false;
                         jumpDirection = 1;
                         lastStance = currentStance;
                         currentStance = GameConstants.PlayerStance.SideJumpReady;
+                        currentModel = modelRight;
                     }
                     WaitForPlatformEnd(platformList);
                     break;

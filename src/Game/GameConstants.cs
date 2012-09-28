@@ -37,7 +37,7 @@ namespace Game
 
         public static Vector3 CameraPosition = new Vector3(FirstPlatformPosition+(RowLength/2)*SpaceBetweenPlatforms, 20.0f, 35.0f);
         public static Vector3 CameraLookAtPoint = new Vector3(FirstPlatformPosition + (RowLength / 2) * SpaceBetweenPlatforms, 0.0f, -30f);
-
+        public const float HeroScale = 8f;
         //public static Vector3 CameraPosition = new Vector3(20f,0f,5f); //debug
         //public static Vector3 CameraLookAtPoint = new Vector3(0f,0,5f); //debug
 

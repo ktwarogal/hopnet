@@ -204,7 +204,9 @@ namespace Game
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
             debugFont = Content.Load<SpriteFont>(@"myFont");
-            Content.Load<Model>(@"Models\hero");
+            //Content.Load<Model>(@"Models\heroUp");
+            //Content.Load<Model>(@"Models\heroLeft");
+            //Content.Load<Model>(@"Models\heroRight");
             backgroundTexture = Content.Load<Texture2D>(@"Sprites\cosmos");
             platformModel = Content.Load<Model>(@"Models\platforma");
             Content.Load<Texture2D>(@"Sprites\cursor_left_normal");
